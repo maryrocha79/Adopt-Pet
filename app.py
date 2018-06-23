@@ -1,9 +1,13 @@
+import os
 from flask import Flask, url_for, render_template, redirect, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, RadioField, TextAreaField, BooleanField
 from wtforms.validators import InputRequired, Length, NumberRange, URL, Optional
+import requests
+
+petfinder_api_key = os.environ["PETFINDER_API_KEY"]
 
 defaultimg = "https://media.gettyimages.com/photos/portrait-of-otter-on-grassy-field-picture-id590287239?s=612x612"
 app = Flask(__name__)
@@ -36,28 +40,44 @@ class AddPetForm(FlaskForm):
     name = StringField("Pet Name", validators=[InputRequired()])
     species = RadioField(
         "Species",
-        validators=[InputRequired()],
         choices=[('cat', 'Cat'), ('dog', 'Dog'), ('porcupine', 'Porcupine')])
     photo_url = StringField("Photo Url", validators=[Optional(), URL()])
     age = IntegerField(
-        "Pet Age", validators=[InputRequired(),
+        "Pet Age", validators=[Optional(),
                                NumberRange(min=0, max=30)])
-    notes = TextAreaField("Comments", validators=[Length(max=50)])
+    notes = TextAreaField("Comments", validators=[Optional(), Length(max=50)])
 
 
-class EditForm(FlaskForm):
+class EditPetForm(FlaskForm):
     photo_url = StringField("Photo Url", validators=[Optional(), URL()])
     notes = TextAreaField("Comments", validators=[Length(max=50)])
     available = BooleanField("Available?")
 
 
-@app.route('/pets')
+def get_random_pet():
+    r = requests.get("http://api.petfinder.com/pet.getRandom", {
+        "key": petfinder_api_key,
+        "output": "basic",
+        "format": "json"
+    })
+    print(r.content)
+    return r.json()['petfinder']['pet']
+
+
+@app.route('/')
 def pet_index():
     pets = Pet.query.all()
-    return render_template('pet_index.html', pets=pets)
+    find_pet = get_random_pet()
+    pet_info = {
+        "name": find_pet['name']['$t'],
+        "photo_url": find_pet['media']['photos']['photo'][1]['$t'],
+        "age": find_pet['age']['$t']
+    }
+
+    return render_template('pet_index.html', pets=pets, pet_info=pet_info)
 
 
-@app.route('/pets/add', methods=['GET', 'POST'])
+@app.route('/add', methods=['GET', 'POST'])
 def add_pet():
     """Show pet add form and handle adding"""
     form = AddPetForm()
@@ -82,17 +102,18 @@ def add_pet():
     else:
         return render_template("pet_add_form.html", form=form)
 
-    @app.route('/pets/<int:pet_id>', methods=['GET', 'POST'])
-    def display_edit(pet_id):
-        pet = Pet.query.get(pet_id)
-        form = EditForm(obj=pet)
 
-        if form.validate_on_submit():
-            pet.photo_url = form.data['photo_url']
-            pet.notes = form.data['notes']
-            pet.available = form.data['available']
-            db.session.commit()
-            return redirect(url_for('pet_index'))
+@app.route('/<int:pet_id>', methods=['GET', 'POST'])
+def display_edit(pet_id):
+    pet = Pet.query.get(pet_id)
+    form = EditPetForm(obj=pet)
 
-        else:
-            return render_template("pet_edit_form.html", form=form, pet=pet)
+    if form.validate_on_submit():
+        pet.photo_url = form.data['photo_url']
+        pet.notes = form.data['notes']
+        pet.available = form.data['available']
+        db.session.commit()
+        return redirect(url_for('pet_index'))
+
+    else:
+        return render_template("pet_edit_form.html", form=form, pet=pet)

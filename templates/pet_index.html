@@ -1,13 +1,14 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="card mb-3" style="max-width: 20rem;">
+<div>
+  <div class="card mb-3" style="max-width: 20rem;">
     {% for pet in pets %}
     <h3 class="card-header">{{pet.name}}</h3>
-  
+    <a href="{{url_for('display_edit' , pet_id = pet.id)}}">Edit</a>
     {% if photo_url%}
-    <img style="height: 200px; width: 100%; display: block;" src="{{pet.photo_url}}" alt="Card image">
+    <img style="height: 200px; width: 100%; display: block;" src="{{ pet.photo_url }}" alt="Card image">
     {% else%}
-    <img style="height: 200px; width: 100%; display: block;" src="{{defaultimg}}" alt="Card image">
+    <img style="height: 200px; width: 100%; display: block;" src="{{ defaultimg }}" alt="Card image">
     {% endif%}
     <div class="card-body">
      {% if pet.available %}
@@ -16,9 +17,18 @@
     </div>
     {% endfor%}
   </div>
-
+</div>
+<div>
+  <div class="card mb-3" style="max-width: 20rem;">
+    <h3 class="card-header">{{pet_info.name}}</h3>
+    <img style="height: 200px; width: 100%; display: block;" src="{{ pet_info.photo_url }}" alt="Card image">
+    <div class="card-body">
+      <p class="card-text">Age: {{ pet_info.age}}</p>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 
 
-<!-- <a href="{{url_for('display_edit' , pet_id = pet.id)}}">Edit</a> -->
+
