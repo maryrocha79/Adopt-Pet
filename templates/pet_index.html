@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
 {% block content %}
-<div>
-  <div class="card mb-3" style="max-width: 20rem;">
+<div class="card-deck" >
     {% for pet in pets %}
+  <div class="card mb-3" style="max-width: 20rem;">
+    
     <h3 class="card-header">{{pet.name}}</h3>
     <a href="{{url_for('display_edit' , pet_id = pet.id)}}">Edit</a>
-    {% if photo_url%}
+    {% if pet.photo_url%}
     <img style="height: 200px; width: 100%; display: block;" src="{{ pet.photo_url }}" alt="Card image">
     {% else%}
     <img style="height: 200px; width: 100%; display: block;" src="{{ defaultimg }}" alt="Card image">
@@ -15,8 +16,9 @@
       <p class="card-text">Available</p>
       {%endif%}
     </div>
-    {% endfor%}
+    
   </div>
+  {% endfor%}
 </div>
 <div>
   <div class="card mb-3" style="max-width: 20rem;">

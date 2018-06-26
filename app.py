@@ -55,12 +55,14 @@ class EditPetForm(FlaskForm):
 
 
 def get_random_pet():
+    """ Get random pet from api"""
     r = requests.get("http://api.petfinder.com/pet.getRandom", {
         "key": petfinder_api_key,
         "output": "basic",
         "format": "json"
     })
     print(r.content)
+    # turns json into a python dictionary
     return r.json()['petfinder']['pet']
 
 
@@ -68,13 +70,15 @@ def get_random_pet():
 def pet_index():
     pets = Pet.query.all()
     find_pet = get_random_pet()
+    # add conditional (if find_pet['media']['photos']['photo': do pet)
     pet_info = {
         "name": find_pet['name']['$t'],
-        "photo_url": find_pet['media']['photos']['photo'][1]['$t'],
+        "photo_url": find_pet['media']['photos']['photo'][0]['$t'],
         "age": find_pet['age']['$t']
     }
 
-    return render_template('pet_index.html', pets=pets, pet_info=pet_info)
+    return render_template(
+        'pet_index.html', pets=pets, pet_info=pet_info, defaultimg=defaultimg)
 
 
 @app.route('/add', methods=['GET', 'POST'])
@@ -105,7 +109,7 @@ def add_pet():
 
 @app.route('/<int:pet_id>', methods=['GET', 'POST'])
 def display_edit(pet_id):
-    pet = Pet.query.get(pet_id)
+    pet = Pet.query.get_or_404(pet_id)
     form = EditPetForm(obj=pet)
 
     if form.validate_on_submit():

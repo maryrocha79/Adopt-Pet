@@ -14,3 +14,6 @@
 # r.json()['petfinder']['pet']['media']['photos']['photo'][0]['$t']
 # r.json()['petfinder']['pet']['name']
 #  r.json()['petfinder']['pet']['age']
+
+# http://api.petfinder.com/pet.get?key=19156f34ec1f18669820612135c3eedc&id=17&format=json
+# bash:export PETFINDER_API_KEY=vvvbbbnnnmm/os.environ is like a dictionary.
